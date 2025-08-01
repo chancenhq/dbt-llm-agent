@@ -56,6 +56,7 @@ services:
       - "8000:8000" # Standardized port
     volumes:
       - ./backend_django:/app # Mount local code for development
+      - ../dbt-chancen:/dbt-chancen
     env_file:
       - .env
     environment:
@@ -85,6 +86,7 @@ services:
       "
     volumes:
       - ./backend_django:/app # Mount local code for development
+      - ../dbt-chancen:/dbt-chancen
     env_file:
       - .env
     environment:
@@ -111,6 +113,7 @@ services:
       - "5555:5555"
     volumes:
       - ./backend_django:/app # Mount local code for development
+      - ../dbt-chancen:/dbt-chancen
     env_file:
       - .env
     environment:
@@ -155,6 +158,7 @@ services:
       - "8080:8080"
     volumes:
       - ./mcp_server:/app
+      - ../dbt-chancen:/dbt-chancen
       - /app/.venv # Exclude the virtual environment from volume mount
     env_file:
       - .env
