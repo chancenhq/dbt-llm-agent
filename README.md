@@ -389,3 +389,238 @@ We 💛 community PRs. Please file an issue first for major changes. Make sure `
 ## 10. License
 
 Ragstar is released under the MIT License — see [LICENSE](./LICENSE).
+
+---
+
+## 99. OLD DOCS
+
+### Option 1: Docker Compose (Recommended)
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/pragunbhutani/ragstar.git
+    cd ragstar
+    ```
+
+2.  **Set up environment variables:**
+    Rename `.env.example` to `.env` and populate it with your specific configurations, such as your OpenAI API key and the `APP_HOST` (e.g., `localhost` or your server's IP address).
+
+    ```bash
+    cp .env.example .env
+    # Open .env and fill in your values
+    ```
+
+3.  **Configure Ragstar rules:**
+    Rename `.ragstarrules.example.yml` to `.ragstarrules.yml`. This file allows you to define custom instructions and behaviors for your RAG application.
+
+    ```bash
+    cp .ragstarrules.example.yml .ragstarrules.yml
+    # Open .ragstarrules.yml and customize if needed
+    ```
+
+4.  **Build and run with Docker Compose:**
+    This command will build the Docker images and start the application in detached mode.
+
+    ```bash
+    docker compose up --build -d
+    ```
+
+5.  **Run initial Django commands:**
+    Execute these commands in the `app` container to set up the database and create an admin user.
+
+    ```bash
+    docker compose exec app uv run python manage.py migrate
+    docker compose exec app uv run python manage.py createsuperuser # Follow prompts to create your admin user
+    ```
+
+6.  **Initialize your project:**
+    This command sets up the necessary project configurations. You can choose between `cloud`, `core`, or `local` methods.
+
+    ```bash
+    docker compose exec app uv run python manage.py init_project --method cloud
+    # Or --method core, or --method local
+    ```
+
+7.  **Access the Django Admin:**
+    Open your web browser and navigate to `http://<your_APP_HOST_value>/admin` (e.g., `http://localhost/admin` if `APP_HOST=localhost`).
+    Log in with the superuser credentials you created.
+
+8.  **Embed Models:**
+    In the Django admin interface, you can:
+    - Navigate to "Models".
+    - Click on "Interpret".
+    - Select and embed the models you want to use for answering questions.
+
+### Option 2: Local Python Environment (Advanced)
+
+If you prefer not to use Docker, you can set up a local Python environment.
+
+1.  **Prerequisites:**
+
+    - Python 3.10 or higher.
+    - `uv` (Python package installer and virtual environment manager). You can install it from [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv).
+    - A running PostgreSQL server (version 11+) with the `pgvector` extension enabled.
+
+2.  **Check Python Version:**
+
+    ```bash
+    python --version # or python3 --version
+    ```
+
+3.  **Clone Repository:**
+
+    ```bash
+    git clone https://github.com/pragunbhutani/ragstar.git
+    cd ragstar
+    ```
+
+4.  **Create a virtual environment and install dependencies:**
+
+    ```bash
+    # Create a virtual environment (e.g., named .venv)
+    python -m venv .venv
+    # Or using uv: uv venv
+
+    # Activate the virtual environment
+    source .venv/bin/activate # On Windows: .venv\Scripts\activate
+
+    # Install dependencies using uv
+    uv pip install -r requirements.txt
+    # Or if you have a pyproject.toml configured for uv:
+    # uv pip install -e .
+    ```
+
+5.  **Set up PostgreSQL:**
+
+    - Install PostgreSQL and `pgvector`.
+    - Create a database (e.g., `ragstar_local_dev`).
+    - Enable the `pgvector` extension in the database:
+      ```sql
+      -- Run in psql connected to your database
+      CREATE EXTENSION IF NOT EXISTS vector;
+      ```
+
+6.  **Configure Environment Variables:**
+    Copy the example environment file and fill in your details:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env`:
+
+    - **Required:** Set your `OPENAI_API_KEY`.
+    - **Required:** Set `DATABASE_URL` to your local PostgreSQL connection string (e.g., `postgresql://user:password@host:port/dbname`). Ensure this matches the database you created. (The `.env.example` might have fallback variables like `DB_NAME_FALLBACK`, etc., which are used if `DATABASE_URL` is not set; for local setup, explicitly setting `DATABASE_URL` is clearer).
+    - **Required:** Set `APP_HOST` (e.g., `localhost` or `127.0.0.1`).
+    - **Ragstar Rules:** Rename `.ragstarrules.example.yml` to `.ragstarrules.yml` and customize if needed.
+    - **Slack (Optional):** Configure `INTEGRATIONS_SLACK_BOT_TOKEN` and `INTEGRATIONS_SLACK_SIGNING_SECRET` if you plan to use the Slack integration.
+    - **Other:** Review other variables like `RAGSTAR_LOG_LEVEL`, etc., and adjust if needed.
+
+7.  **Run Database Migrations:**
+    Apply database schema changes:
+
+    ```bash
+    uv run python manage.py migrate
+    ```
+
+8.  **Create a Superuser:**
+    Create an admin account to access the Django admin interface:
+
+    ```bash
+    uv run python manage.py createsuperuser
+    # Follow the prompts
+    ```
+
+9.  **Initialize your project:**
+    This command sets up the necessary project configurations.
+
+    ```bash
+    uv run python manage.py init_project --method cloud
+    # Or --method core, or --method local, depending on your dbt project setup.
+    ```
+
+9b.  **[dbt core] Initialize your project:**
+    If you use `dbt` core you might need to set up adapters.  Sample below for PostgreSQL.
+
+    ```bash
+    uv pip install dbt-core dbt-postgres
+    uv run python manage.py init_project --method core
+    ```
+
+10. **Run the Development Server:**
+
+    ```bash
+    uv run python manage.py runserver
+    ```
+
+    The application will typically be available at `http://<your_APP_HOST_value>:8000` (e.g., `http://localhost:8000`).
+
+11. **Access the Django Admin & Embed Models:**
+    Follow the same steps as in the Docker setup (steps 7 and 8) to access the admin interface (`http://<your_APP_HOST_value>:8000/admin`) and embed your models.
+
+## Usage
+
+After setup and initialization, you can interact with Ragstar.
+
+### Using Docker Compose:
+
+Most Django `manage.py` commands should be run **inside the `app` container** using `docker compose exec`:
+
+```bash
+# Example: Run database migrations (if not already done by entrypoint)
+docker compose exec app uv run python manage.py migrate
+
+# Example: Create a superuser (if not done during initial setup)
+docker compose exec app uv run python manage.py createsuperuser
+
+# Example: Initialize project
+docker compose exec app uv run python manage.py init_project --method cloud
+```
+
+The application server is started automatically by `docker compose up`. Access it via `http://<your_APP_HOST_value>/admin`.
+
+### Using Local Python Environment:
+
+Run Django `manage.py` commands directly using `uv run` from your activated virtual environment:
+
+```bash
+# Example: Run the development server
+uv run python manage.py runserver
+
+# Example: Create a superuser
+uv run python manage.py createsuperuser
+
+# Example: Initialize project
+uv run python manage.py init_project --method cloud
+```
+
+Access the application at `http://<your_APP_HOST_value>:8000` and the admin interface at `http://<your_APP_HOST_value>:8000/admin`.
+
+### Core Django Management Commands
+
+The primary way to manage and interact with the application (outside of the web interface) is through Django's `manage.py` script. Here are some key commands:
+
+- **`uv run python manage.py migrate`**: Applies database migrations.
+- **`uv run python manage.py createsuperuser`**: Creates an administrator account.
+- **`uv run python manage.py init_project --method <cloud|core|local>`**: Initializes Ragstar with your project data (e.g., from dbt). This is crucial for setting up the knowledge base.
+- **`uv run python manage.py runserver [host:port]`**: Starts the Django development web server.
+
+Other functionalities, such as interpreting and embedding models, are primarily handled through the Django admin interface after logging in.
+
+## Slack Integration (Optional)
+
+Ragstar provides a Slack manifest to easily integrate its functionalities into your Slack workspace.
+
+1.  Ensure `INTEGRATIONS_SLACK_SIGNING_SECRET` and `INTEGRATIONS_SLACK_BOT_TOKEN` are set in your `.env` file.
+2.  Use the `.slack_manifest.example.json` file as a template to create a new Slack app.
+3.  Follow Slack's documentation for creating an app from a manifest.
+4.  This will enable features like asking questions and receiving answers directly within Slack (assuming the Slack integration is running as part of the Django application).
+
+## Contributing
+
+Contributions are welcome! Please follow standard fork-and-pull-request workflow.
+
+## License
+
+[MIT License](https://opensource.org/licenses/MIT)
